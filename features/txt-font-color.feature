@@ -3,6 +3,19 @@ Feature: Query and set font color
   As a developer using python-pptx
   I need to query and set the color of text
 
+  Scenario Outline: Query solid font color without changing the fill
+    Given a font with <color type> color
+     When I query whether the font has a solid color
+      And I save and reload the presentation
+     Then font.has_color is <value>
+      And the font color query has not changed the font XML
+
+  Examples: Solid color presence
+    | color type | value |
+    | no         | False |
+    | an RGB     | True  |
+    | a theme    | True  |
+
   Scenario Outline: Get font color type
      Given a font with <color type> color
       Then the font's color type is <value>

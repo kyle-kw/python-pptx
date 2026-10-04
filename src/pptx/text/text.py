@@ -9,6 +9,7 @@ from pptx.enum.dml import MSO_FILL
 from pptx.enum.lang import MSO_LANGUAGE_ID
 from pptx.enum.text import MSO_AUTO_SIZE, MSO_UNDERLINE, MSO_VERTICAL_ANCHOR
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.oxml.ns import qn
 from pptx.oxml.simpletypes import ST_TextWrappingType
 from pptx.shapes import Subshape
 from pptx.text.fonts import FontFiles
@@ -304,7 +305,13 @@ class Font(object):
 
     @lazyproperty
     def color(self) -> ColorFormat:
-        """The |ColorFormat| instance that provides access to the color settings for this font."""
+        """The |ColorFormat| instance that provides access to this font's color settings.
+
+        Accessing this property creates a solid fill if one is not present, replacing any
+        non-solid fill. This can change the document even when only reading the color and can
+        override inherited formatting. Use :attr:`has_color` to check for an existing solid fill
+        before accessing this property when inspecting a font without changing its fill.
+        """
         if self.fill.type != MSO_FILL.SOLID:
             self.fill.solid()
         return self.fill.fore_color
@@ -316,6 +323,17 @@ class Font(object):
         Provides access to fill properties such as fill color.
         """
         return FillFormat.from_fill_parent(self._rPr)
+
+    @property
+    def has_color(self) -> bool:
+        """|True| if a solid fill is present in this font's own properties.
+
+        This read-only query does not change the XML or resolve inherited colors. It returns
+        |False| for inherited fills, no-fill, and non-solid fills such as gradients and patterns.
+        It returns |True| for an existing empty solid fill, whose ``color.type`` is |None|. Check
+        the color type before reading ``color.rgb`` or ``color.theme_color``.
+        """
+        return self._rPr.find(qn("a:solidFill")) is not None
 
     @property
     def italic(self) -> bool | None:

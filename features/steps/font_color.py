@@ -34,6 +34,12 @@ def step_font_with_color_brightness(context, setting):
 # when ====================================================
 
 
+@when("I query whether the font has a solid color")
+def step_query_solid_font_color(context):
+    context.original_font_xml = context.font._rPr.xml
+    context.has_color = context.font.has_color
+
+
 @when("I set the font color brightness to {value}")
 def step_set_font_color_brightness(context, value):
     context.font.color.brightness = float(value)
@@ -48,6 +54,22 @@ def step_set_font_color_value(context, color_type):
 
 
 # then ====================================================
+
+
+@then("font.has_color is {value}")
+def step_font_has_color_is_value(context, value):
+    expected = value == "True"
+    textbox = context.prs.slides[0].shapes[context.textbox_idx]
+    font = textbox.text_frame.paragraphs[0].runs[0].font
+    assert context.has_color is expected
+    assert font.has_color is expected
+
+
+@then("the font color query has not changed the font XML")
+def step_font_color_query_preserves_xml(context):
+    textbox = context.prs.slides[0].shapes[context.textbox_idx]
+    font = textbox.text_frame.paragraphs[0].runs[0].font
+    assert font._rPr.xml == context.original_font_xml
 
 
 @then("its color value matches its RGB color")

@@ -177,3 +177,37 @@ this will not change color when the theme is changed::
 A run can also be made into a hyperlink by providing a target URL::
 
     run.hyperlink.address = 'https://github.com/scanny/python-pptx'
+
+
+Reading font color without changing the fill
+--------------------------------------------
+
+Accessing ``font.color`` creates a solid fill when none is present, replacing
+any non-solid fill. This supports assignments such as ``font.color.rgb = ...``,
+but merely reading the property can also change formatting, including color
+inheritance.
+
+Use :attr:`.Font.has_color` to check for a solid fill before reading
+``font.color``::
+
+    from pptx.enum.dml import MSO_COLOR_TYPE
+
+    font = run.font
+    if font.has_color:
+        color = font.color
+        if color.type == MSO_COLOR_TYPE.RGB:
+            print(color.rgb)
+        elif color.type == MSO_COLOR_TYPE.SCHEME:
+            print(color.theme_color)
+        # Other color types, or None for an empty solid fill, are also possible.
+
+``has_color`` is a read-only, non-destructive query of the font's own solid
+fill. It is ``False`` when the fill is inherited, explicitly no-fill, or a
+non-solid fill such as a gradient or pattern. It does not resolve inherited
+colors or convert a theme color to its rendered RGB value. It is ``True`` for
+an existing empty solid fill, in which case ``font.color.type`` is ``None``;
+check the color type before reading ``rgb`` or ``theme_color``.
+
+The query itself does not change XML. Obtaining ``run.font`` can still create
+an empty run-properties element; it does not create a fill or override the
+inherited color.
